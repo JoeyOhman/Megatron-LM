@@ -244,7 +244,12 @@ class BasicTokenizer(object):
             if self.do_lower_case:
                 token = token.lower()
                 token = self._run_strip_accents(token)
-            split_tokens.extend(self._run_split_on_punc(token))
+            # split_tokens.extend(self._run_split_on_punc(token))
+
+            # Added by Joey
+            punct_toks = self._run_split_on_punc(token)
+            for punct_tok in punct_toks:
+                split_tokens.extend(self._run_split_on_digit(punct_tok))
 
         output_tokens = whitespace_tokenize(" ".join(split_tokens))
         return output_tokens
@@ -259,6 +264,26 @@ class BasicTokenizer(object):
                 continue
             output.append(char)
         return "".join(output)
+
+    def _run_split_on_digit(self, text):
+        """Splits punctuation on a piece of text."""
+        chars = list(text)
+        i = 0
+        start_new_word = True
+        output = []
+        while i < len(chars):
+            char = chars[i]
+            if char.isnumeric():
+                output.append([char])
+                start_new_word = True
+            else:
+                if start_new_word:
+                    output.append([])
+                start_new_word = False
+                output[-1].append(char)
+            i += 1
+
+        return ["".join(x) for x in output]
 
     def _run_split_on_punc(self, text):
         """Splits punctuation on a piece of text."""

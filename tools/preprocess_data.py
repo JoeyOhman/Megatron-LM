@@ -153,6 +153,14 @@ def main():
 
     encoder = Encoder(args)
     tokenizer = build_tokenizer(args)
+
+    # tokenized = tokenizer.tokenize("Hejsan!. [MASK] 3a(7) . [PAD]")
+    # tokenized = tokenizer.tokenize("Hejsan!. 1233a(37) 23. 5 22 ris  !!")
+    # print(tokenized)
+    # decoded = tokenizer.decode(tokenized)
+    # print(decoded)
+    # exit()
+
     pool = multiprocessing.Pool(args.workers, initializer=encoder.initializer)
     encoded_docs = pool.imap(encoder.encode, fin, 25)
     #encoded_docs = map(encoder.encode, fin)

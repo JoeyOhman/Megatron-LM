@@ -52,6 +52,7 @@ from megatron.utils import calc_params_l2_norm
 from megatron.schedules import get_forward_backward_func
 from megatron.utils import report_memory
 
+import wandb
 
 
 def print_datetime(string):
@@ -618,6 +619,16 @@ def training_log(loss_dict, total_loss_dict, learning_rate, iteration,
                       float(max(1, total_loss_dict[advanced_iters_key]))
                 if avg > 0.0:
                     log_string += ' {}: {:.6E} |'.format(key, avg)
+                    # JOEY ADDED WANDB TRAIN LOSS LOG
+                    if (not torch.distributed.is_initialized()) or torch.distributed.get_rank() == 0:
+                        wandb.log({
+                            "train lm loss": avg,
+                            "train lm loss ppl": math.exp(min(20, avg)),
+                            "learning rate": learning_rate,
+                            "iteration": iteration,
+                            "consumed train samples": args.consumed_train_samples,
+                        })
+
                 total_loss_dict[key] = torch.cuda.FloatTensor([0.0])
         log_string += ' loss scale: {:.1f} |'.format(loss_scale)
         if grad_norm is not None:
@@ -638,6 +649,7 @@ def training_log(loss_dict, total_loss_dict, learning_rate, iteration,
             # Report memory after optimizer state has been initialized.
             report_memory('(after {} iterations)'.format(iteration))
             report_memory_flag = False
+
         timers.log(timers_to_log, normalizer=args.log_interval)
 
     return report_memory_flag
@@ -835,6 +847,17 @@ def evaluate_and_print_results(prefix, forward_step_func,
     print_rank_last('-' * length)
     print_rank_last(string)
     print_rank_last('-' * length)
+
+    # JOEY EDIT FOR WANDB
+    if (not torch.distributed.is_initialized()) or torch.distributed.get_rank() == 0:
+        lm_loss = total_loss_dict['lm loss'].item()
+        # wandb.log({"validation lm loss": lm_loss})
+        wandb.log({
+            "validation lm loss": lm_loss,
+            "validation lm loss ppl": math.exp(min(20, lm_loss)),
+            "iteration": iteration,
+            "consumed train samples": args.consumed_train_samples,
+        })
 
 
 def cyclic_iter(iter):

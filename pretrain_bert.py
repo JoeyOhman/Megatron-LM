@@ -29,6 +29,8 @@ from megatron.model import BertModel, ModelType
 from megatron.training import pretrain
 from megatron.utils import average_losses_across_data_parallel_group
 
+import wandb
+
 
 def model_provider(pre_process=True, post_process=True):
     """Build the model."""
@@ -123,6 +125,11 @@ def train_valid_test_datasets_provider(train_val_test_num_samples):
     """Build train, valid, and test datasets."""
     args = get_args()
 
+    if (not torch.distributed.is_initialized()) or torch.distributed.get_rank() == 0:
+        wandb.init(project="megatron_bert", entity="joeyohman")
+        # wandb.config = vars(args)
+        wandb.config.update(args)
+
     print_rank_0('> building train, validation, and test datasets '
                  'for BERT ...')
     train_ds, valid_ds, test_ds = build_train_valid_test_datasets(
@@ -137,6 +144,9 @@ def train_valid_test_datasets_provider(train_val_test_num_samples):
         skip_warmup=(not args.mmap_warmup),
         binary_head=args.bert_binary_head)
     print_rank_0("> finished creating BERT datasets ...")
+    print_rank_0(f"train_ds len: {len(train_ds)}")
+    print_rank_0(f"valid_ds len: {len(valid_ds)}")
+    print_rank_0(f"test_ds len: {len(test_ds)}")
 
     return train_ds, valid_ds, test_ds
 

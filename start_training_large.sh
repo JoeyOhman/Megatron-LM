@@ -2,7 +2,7 @@
 
 export OMP_NUM_THREADS=2
 
-CHECKPOINT_PATH=checkpoints/bert_base
+CHECKPOINT_PATH=checkpoints/bert_large
 VOCAB_FILE=joey/data/robin-vocab.txt
 # DATA_PATH=joey/data/preprocessed/my-bert_text_sentence
 # DATA_PATH=joey-small-data_text_sentence
@@ -19,19 +19,21 @@ DISTRIBUTED_ARGS="--nproc_per_node $NPROC_PER_NODE \
                   --master_addr $MASTER_ADDR \
                   --master_port $MASTER_PORT"
 
-# Intermediate size is set to: hidden-size * 4 = 3072
-BERT_ARGS="--num-layers 12 \
-           --hidden-size 768 \
-           --num-attention-heads 12 \
+# Intermediate size is set to: hidden-size * 4 = 4096
+BERT_ARGS="--num-layers 24 \
+           --hidden-size 1024 \
+           --num-attention-heads 16 \
            --seq-length 512 \
            --max-position-embeddings 512 \
-           --lr 7e-4 \
-           --train-iters 600000 \
-           --lr-warmup-iters 10000 \
+           --lr 4e-4 \
+           --train-iters 500000 \
+           --lr-warmup-iters 30000 \
 	         --micro-batch-size 64 \
-           --global-batch-size 2048 \
-           --adam-beta2 0.999 \
+           --global-batch-size 8192 \
+           --adam-beta2 0.98 \
            --adam-eps 1e-6 \
+           --clip-grad 0.0 \
+           --tensorboard-dir tensorboard \
            --vocab-file $VOCAB_FILE \
            --split 949,50,1 \
            --fp16 \

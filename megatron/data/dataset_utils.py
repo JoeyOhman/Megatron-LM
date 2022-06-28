@@ -436,6 +436,17 @@ def build_train_valid_test_datasets(data_prefix, data_impl, splits_string,
     output = get_datasets_weights_and_num_samples(data_prefix,
                                                   train_valid_test_num_samples)
     prefixes, weights, datasets_train_valid_test_num_samples = output
+    if (not torch.distributed.is_initialized()) or torch.distributed.get_rank() == 0:
+        print("***** DATASET NUM_SAMPLES FROM dataset_utils.py")
+        num_train_samples = [x[0] for x in datasets_train_valid_test_num_samples]
+        num_val_samples = [x[1] for x in datasets_train_valid_test_num_samples]
+        num_test_samples = [x[2] for x in datasets_train_valid_test_num_samples]
+        print("Train:", num_train_samples)
+        print("Val:", num_val_samples)
+        print("Test:", num_test_samples)
+        print("Sum Train:", sum(num_train_samples))
+        print("Sum Val:", sum(num_val_samples))
+        print("Sum Test:", sum(num_test_samples))
 
     # Build individual datasets.
     train_datasets = []
@@ -446,7 +457,7 @@ def build_train_valid_test_datasets(data_prefix, data_impl, splits_string,
             prefixes[i], data_impl, splits_string,
             datasets_train_valid_test_num_samples[i],
             max_seq_length, masked_lm_prob, short_seq_prob,
-            seed, skip_warmup, binary_head, dataset_type=dataset_type)
+            seed, skip_warmup, binary_head, max_seq_length_dec, dataset_type=dataset_type)
         if train_ds:
             train_datasets.append(train_ds)
         if valid_ds:
